@@ -1,0 +1,18 @@
+
+--------------------spark------------------
+
+helm install spark bitnami/spark -n airflow
+
+
+-------------airflow-------------------
+
+docker build -t airflow-custom:1.0.0 .
+
+kind load docker-image airflow-custom:1.0.0 --name cluster
+
+helm upgrade --install airflow airflow-stable/airflow -n airflow -f custom-values.yaml
+
+
+>>>connection string
+
+spark://spark-master-0.spark-headless

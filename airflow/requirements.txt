@@ -1,0 +1,9 @@
+airflow-provider-great-expectations==0.2.2
+apache-airflow-providers-apache-spark==4.0.0
+apache-airflow-providers-papermill==3.1.0
+apache-airflow-providers-postgres==5.3.1
+apache-airflow-providers-apache-livy[http]
+sqlalchemy
+psycopg2-binary
+pandas
+delta-spark

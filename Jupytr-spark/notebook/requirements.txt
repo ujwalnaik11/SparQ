@@ -1,0 +1,7 @@
+notebook==6.2.0
+ipynb==0.5.1
+sparkmonitor==1.1.1
+pyspark==3.1.1
+delta-spark
+sqlalchemy
+psycopg2-binary

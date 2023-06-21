@@ -1,0 +1,73 @@
+kubectl exec -it postgres-655d75f54b-2s5fz -- psql -h localhost -U user --password -p 5432 db
+
+>psql -h service/postgres -U user --password -p 5432 db
+
+------bitnami-----------
+
+psql -h postgres-postgresql -U postgres -p 5432 --password
+
+------------------------
+
+kubectl exec -n default spark-master-86d5795cff-wdd5m -it sh
+
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+apt-get update
+
+apt-get install -y lsb-release && apt-get clean all
+
+apt install postgresql postgresql-contrib
+
+su postgres
+
+psql -h 172.22.0.3 -U user --password -p 32176 db
+
+
+
+( 192.168.49.2 is minikube ip
+  32650 is nodeport of postgres service )
+
+
+
+
+CREATE TABLE IF NOT EXISTS newtable (
+    age INT,
+    gender VARCHAR(20) NOT NULL,
+    country VARCHAR(50) NOT NULL,
+    state VARCHAR(20)
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS demo_table (
+    id INT PRIMARY KEY ,
+    FL_DATE DATE,
+    OP_CARRIER VARCHAR(20),
+    OP_CARRIER_FL_NUM INT,
+    ORIGIN_CITY_NAME VARCHAR(50),
+    DEST_CITY_NAME VARCHAR(50),
+    CRS_DEP_TIME INT,
+    DEP_TIME INT,
+    WHEELS_ON INT,TAXI_IN INT, CRS_ARR_TIME INT, ARR_TIME INT, CANCELLED INT, DISTANCE INT 
+);
+
+
+
+
+kubectl exec -i -t -n airflow airflow-postgresql-0 -c airflow-postgresql -- sh
+
+psql -h airflow-postgresql -U postgres --password -p 5432 airflow
+
+select * from dag_runs;
+
+
+
+
+
+
+
+
+.config("spark.shuffle.service.enabled", "false") \
+.config("spark.dynamicAllocation.enabled", "false") \
+   

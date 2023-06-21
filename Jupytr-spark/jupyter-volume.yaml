@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume # Create PV 
+metadata:
+  name: jupyter-volume # Sets PV name
+  labels:
+    type: local # Sets PV's type
+    app: jupyter-notebook
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi # Sets PV's size
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/home/notebook" # Sets PV's host path

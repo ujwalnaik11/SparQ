@@ -1,0 +1,183 @@
+
+---------------s3 volume sharing---------------
+
+kubectl create ns confluent
+
+kubectl create -f s3-volume.yaml -n confluent
+( 2 volumes to be created)
+
+1.
+
+
+apiVersion: com.ie.ibm.hpsys/v1alpha1
+kind: Dataset
+metadata:
+  name: kafka-vol-claim
+spec:
+  local:
+    type: "COS"
+    accessKeyID: "myaccesskey"
+    secretAccessKey: "mysecretkey"
+    endpoint: "http://minio.default.svc.cluster.local:9000"
+    bucket: "kafka-files"
+    region: "" #it can be empty
+
+
+
+2.
+
+apiVersion: com.ie.ibm.hpsys/v1alpha1
+kind: Dataset
+metadata:
+  name: kafka-volume-claim
+spec:
+  local:
+    type: "COS"
+    accessKeyID: "myaccesskey"
+    secretAccessKey: "mysecretkey"
+    endpoint: "http://minio.default.svc.cluster.local:9000"
+    bucket: "kafka-plugins"
+    region: "" #it can be empty
+
+
+
+
+-------------------------install kafka --------------------
+
+1. git clone https://github.com/confluentinc/cp-helm-charts.git
+
+
+goto >> cp-helm-charts/charts/cp-zookeeper/templates/podDisruptionBudget.yaml
+
+delete podDisruptionBudget.yaml file
+
+
+2. Modify values.yaml
+
+
+>> cp-helm-charts/charts/cp-kafka/values.yaml
+"offsets.topic.replication.factor": "1"
+
+>> cp-helm-charts/charts/cp-kafka-connect/values.yaml
+"config.storage.replication.factor": "1"
+"offset.storage.replication.factor": "1"
+"status.storage.replication.factor": "1"
+
+
+volumeMounts:
+  - name: kafka-files
+    mountPath: /etc/kafka-connect/data
+  - name: kafka-plugins
+    mountPath: /usr/share/confluent-hub-components
+
+volumes:
+  - name: kafka-plugins
+    persistentVolumeClaim:
+      claimName: kafka-volume-claim
+  - name: kafka-files
+    persistentVolumeClaim:
+      claimName: kafka-vol-claim
+
+
+>> cp-helm-charts/charts/cp-control-center/values.yaml
+"replication.factor": "1"
+
+
+
+
+3. Use Init container for installing packages in cp-kafka-connect
+
+>> cp-helm-charts/charts/cp-kafka-connect/templates/deployment.yaml
+
+(packages to be installed 
+
+jcustenborder/kafka-connect-spooldir:2.0.65
+confluentinc/kafka-connect-jdbc:10.6.2
+
+)
+
+
+4. Install kafka 
+
+helm upgrade --install my-confluent .\ -n confluent
+
+
+-------------------------download postgres jar ------------------------
+
+kubectl exec -i -t -n confluent my-confluent-cp-kafka-connect-596dbf96b-wpxkj -c cp-kafka-connect-server -- sh
+cd ..
+cd ..
+cd usr/share/java/
+mkdir kafka-connect-jdbc
+cd kafka-connect-jdbc
+wget https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
+
+
+
+---------------------------------------Working with Kafka -----------------------
+
+1. create a topic named "demotopic" in control center
+
+2. kubectl exec -i -t -n confluent my-confluent-cp-kafka-connect-596dbf96b-wpxkj -c cp-kafka-connect-server -- sh
+
+3. Download csv
+
+curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "/etc/kafka-connect/data/unprocessed/csv-spooldir-source.csv"
+
+4. csv data to kafka
+
+curl -i -X PUT -H "Accept:application/json" \
+    -H  "Content-Type:application/json" http://my-confluent-cp-kafka-connect:8083/connectors/source-csv-spooldir-00/config \
+    -d '{
+        "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
+        "topic": "demotopic",
+        "input.path": "/etc/kafka-connect/data/unprocessed",
+        "finished.path": "/etc/kafka-connect/data/processed",
+        "error.path": "/etc/kafka-connect/data/error",
+        "input.file.pattern": "csv-spooldir-source.csv",
+        "schema.generation.enabled":"true",
+        "csv.first.row.as.header":"true"
+        }'
+
+5. kafka data to postgres
+
+curl -X PUT http://localhost:8083/connectors/sink-postgres-jdbc-00/config \
+    -H "Content-Type: application/json" \
+    -d '{
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://superset-postgresql.super.svc.cluster.local:5432/superset",
+        "connection.user": "superset",
+        "connection.password": "superset",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "demotopic",
+        "auto.create": "true",
+        "auto.evolve":"true",
+        "table.name.format":"demotable",
+        "quote.sql.identifiers": "always"
+    }'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

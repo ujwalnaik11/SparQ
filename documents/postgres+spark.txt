@@ -1,0 +1,51 @@
+
+
+1. Make sure u have built image with following installations :
+
+
+
+RUN wget https://jdbc.postgresql.org/download/postgresql-42.2.5.jar 
+RUN mv postgresql-42.2.5.jar /opt/spark/jars/
+RUN pip3 install pyspark==3.1.1 delta-spark psycopg2-binary
+
+
+
+2. Making connection in spark :
+
+spark = SparkSession\
+      .builder\
+      .appName("Practice")\
+      .config("spark.app.name", "practice")\
+      .config("spark.executor.instances", "2")\
+      .config("spark.jars", "./opt/spark/jars/postgresql-42.2.5.jar")\
+      .config("spark.jars.packages", "io.delta:delta-core_2.12:0.7.0") \
+      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+      .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+      .getOrCreate()
+
+
+Note: Delta-core version must be compatible with your spark installation :
+delta-core_2.12:0.7.0        : 2.12 is ur scala version and 0.7.0 is delta version for ur specific spark .
+
+
+3. read and write table to postgres:
+
+
+df = spark.read \
+    .format("jdbc") \
+    .option("url", "jdbc:postgresql://172.22.0.3:32176/db") \
+    .option("dbtable", "newtable") \
+    .option("user", "user") \
+    .option("password", "password") \
+    .load()
+
+
+
+df.write\
+    .format("jdbc") \
+    .option("url", "jdbc:postgresql://172.22.0.3:32176/db") \
+    .option("dbtable", "newtable") \
+    .option("user", "user") \
+    .option("password", "password") \
+    .mode("overwrite") \
+    .save()

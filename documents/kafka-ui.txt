@@ -1,0 +1,94 @@
+
+
+---------------------------ui-------------------------
+  kafka:
+    clusters:
+      - name: kafka-connect-kafka
+        bootstrapServers: PLAINTEXT://kafka-connect-kafka:9092
+        zookeeper: http://kafka-connect-zookeeper:2181
+        schemaRegistry: http://kafka-connect-schema-registry:8081
+        kafkaConnect:
+          - name: kafka-connect
+          address: http://kafka-connect:8083
+
+
+
+
+
+helm upgrade --install my-kafka-ui kafka-ui/kafka-ui --version 0.5.1 -f values.yaml -n kafka
+
+
+
+-------------------------------- additional (ksql)--------------------
+
+CREATE STREAM demo1 WITH (KAFKA_TOPIC='streamtopic',VALUE_FORMAT='AVRO');
+
+CREATE STREAM readings (
+    sensor VARCHAR KEY,
+    reading DOUBLE,
+    location VARCHAR
+) WITH (
+    kafka_topic='readings',
+    value_format='avro',
+    partitions=3
+);
+
+DESCRIBE readings;
+
+
+INSERT INTO readings (sensor, reading, location)
+VALUES ('sensor-1', 45, 'wheel');  
+
+INSERT INTO readings (sensor, reading, location)
+VALUES ('sensor-2', 41, 'motor'); 
+
+INSERT INTO readings (sensor, reading, location)
+VALUES ('sensor-2', 44, 'motor'); 
+
+INSERT INTO readings (sensor, reading, location)
+VALUES ('sensor-1', 42, 'wheel'); 
+
+
+CREATE STREAM high_pri AS
+    SELECT sensor,
+        reading, 
+        UCASE(location) AS location
+    FROM readings
+    WHERE reading > 41
+    EMIT CHANGES;
+
+
+CREATE TABLE avg_readings AS
+    SELECT sensor, 
+         AVG(reading) as avg 
+    FROM readings
+    GROUP BY sensor
+    EMIT CHANGES;
+
+
+
+--------------------------------------------------
+Schema for message values on topic demotopic does not exist in the Schema Registry.
+Subject: demotopic-value Possible causes include: - 
+The topic itself does not exist -> Use SHOW TOPICS; 
+to check - Messages on the topic are not serialized using a format Schema Registry supports -> Use PRINT 'demotopic' FROM BEGINNING; 
+to verify - Messages on the topic have not been serialized using a Confluent Schema Registry supported serializer -> See https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html - 
+The schema is registered on a different instance of the Schema Registry -> Use the REST API to list available subjects https://docs.confluent.io/current/schema-registry/docs/api.html#get--subjects - 
+sYou do not have permissions to access the Schema Registry.Subject: demotopic-value -> See https://docs.confluent.io/current/schema-registry/docs/security.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

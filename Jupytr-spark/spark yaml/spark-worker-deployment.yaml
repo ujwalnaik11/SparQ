@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: spark-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: spark-worker
+  template:
+    metadata:
+      labels:
+        component: spark-worker
+    spec:
+      containers:
+        - name: spark-worker
+          image: spark-custom:7.7.7
+          imagePullPolicy: "IfNotPresent"
+          command: ["/spark-worker"]
+          
+          ports:
+            - containerPort: 8081
+          resources:
+            requests:
+              cpu: 2000m
+          volumeMounts:
+            - name: spark-data
+              mountPath: /mnt/app
+      volumes:
+        - name: spark-data
+          persistentVolumeClaim:
+            claimName: example-dataset
+      
+
+      
+      
+          

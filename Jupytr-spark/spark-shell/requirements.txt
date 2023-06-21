@@ -1,0 +1,5 @@
+sqlalchemy
+pyspark==3.1.1
+delta-spark
+psycopg2-binary
+pandas

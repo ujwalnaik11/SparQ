@@ -1,0 +1,23 @@
+
+---------------Livy--------
+
+kubectl create serviceaccount spark --namespace airflow
+
+
+kubectl create clusterrolebinding spark-role --clusterrole=edit  --serviceaccount=airflow:spark --namespace=airflow
+
+
+
+
+kubectl exec --namespace airflow livy-6764d47bdc-w24bv -- curl -s -k -H 'Content-Type: application/json'-X POST -d '{"name": "test-001","className": "org.apache.spark.examples.SparkPi","numExecutors": 2,"file": "local:///opt/spark/examples/src/main/python/pi.py","args": ["10"],"conf": {"spark.kubernetes.driver.pod.name" : "spark-pi-driver","spark.kubernetes.container.image" : "rootstrap/spark-py:latest","spark.kubernetes.authenticate.driver.serviceAccountName" : "spark","spark.kubernetes.namespace" : "airflow" }}' "http://localhost:8998/batches"
+
+
+
+
+-----------------------kafka-----------------
+
+
+
+helm repo add strimzi https://strimzi.io/charts/
+
+helm install kafka strimzi/strimzi-kafka-operator

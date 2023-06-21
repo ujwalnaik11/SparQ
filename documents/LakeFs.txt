@@ -1,0 +1,165 @@
+
+Reference :
+
+https://medium.com/geekculture/dataops-using-lakefs-for-data-version-control-6ef5ddd65ebe
+
+https://medium.com/codex/version-control-your-data-lake-with-lakefs-e38316c70eea
+
+
+1.MinIO
+
+helm repo add minio https://helm.min.io/
+
+helm show values minio/minio > values.yaml
+(change replicas to 1 )
+
+helm install minio minio/minio -f values.yaml --set accessKey=myaccesskey,secretKey=mysecretkey 
+
+
+
+>>>>>>>>> next store delta tables from spark in s3 bucket <<<<<<<<<<<<<<<<
+
+(note : add these dependencies in DockerFile )
+
+RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar
+RUN mv hadoop-aws-3.2.0.jar /opt/spark/jars/
+
+RUN wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.375/aws-java-sdk-bundle-1.11.375.jar
+RUN mv aws-java-sdk-bundle-1.11.375.jar /opt/spark/jars/
+
+
+
+
+2. Lakefs
+
+helm repo add lakefs https://charts.lakefs.io
+
+helm install lakefs lakefs/lakefs -f values.yaml
+
+------------------------values.yaml--------------------
+
+# Default values for lakefs.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: treeverse/lakefs
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  ingressClassName: ""
+  defaultBackend: {}
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+podAnnotations: {}
+jobPodAnnotations:
+  sidecar.istio.io/inject: "false"
+
+deployment:
+  port: 8000
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+s3Fallback:
+  enabled: false
+
+# yamllint disable rule:comments
+
+# Example: using node instance storage for caching committed data:
+# For more information: https://www.vipmind.me/infra/aws/how-to-use-ephemeral-disk-from-ec2-instance-in-eks.html
+#committedLocalCacheVolume:
+#  hostPath:
+#    path: /media/ephemeral0
+
+# yamllint enable
+
+serviceAccount: {}
+
+
+lakefsConfig: |
+  blockstore:
+    type: "s3"
+    s3:
+      force_path_style: "true"
+      endpoint: http://minio.default.svc.cluster.local:9000
+      discover_bucket_region: "false"
+      credentials:
+        access_key_id: myaccesskey
+        secret_access_key: mysecretkey
+
+
+
+
+----------configmap.yaml  ( Update through lens )--------------
+
+  database:
+    type: "postgres"
+    postgres:
+      connection_string: "postgres://superset:superset@superset-postgresql.super.svc.cluster.local:5432/superset"  
+  
+  auth:
+    encrypt:
+      secret_key: "abcdefghijklmno"
+  
+  blockstore:
+    type: "s3"
+    s3:
+      force_path_style: "true"
+      endpoint: http://minio.default.svc.cluster.local:9000
+      discover_bucket_region: "false"
+      credentials:
+        access_key_id: "myaccesskey"
+        secret_access_key: "mysecretkey"
+
+----------------------------------------------------
+
+
+(port forward and note down credentials for login )
+
+access_key_id: AKIAJ3YAWUQ7VBKZ7ERQ
+secret_access_key: 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
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

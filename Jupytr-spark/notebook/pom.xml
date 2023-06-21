@@ -1,0 +1,5 @@
+<dependency>
+     <groupId>com.databricks</groupId>
+     <artifactId>spark-xml_2.11</artifactId>
+     <version>0.6.0</version>
+ </dependency>

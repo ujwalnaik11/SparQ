@@ -1,0 +1,84 @@
+
+
+----------------Multi node kind cluster (not required)-------------------
+
+kind create cluster --name airflow --config kind-cluster.yaml
+
+kubectl get nodes -o wide
+
+
+------------------S3 volume sharing -------------------
+
+>>>> first deploy Minio S3  storage (refer my LakeFS doc )
+
+
+kubectl apply -f https://raw.githubusercontent.com/datashim-io/datashim/master/release-tools/manifests/dlf.yaml
+
+kubectl create -f s3-volume.yaml -n airflow
+
+
+
+-------s3-volume.yaml---------------
+apiVersion: com.ie.ibm.hpsys/v1alpha1
+kind: Dataset
+metadata:
+  name: example-dataset
+spec:
+  local:
+    type: "COS"
+    accessKeyID: "myaccesskey"
+    secretAccessKey: "mysecretkey"
+    endpoint: "http://minio.default.svc.cluster.local:9000"
+    bucket: "airflow"
+    region: "" #it can be empty
+
+
+-----------deploy airflow ---------------------------
+
+helm repo add airflow-stable https://airflow-helm.github.io/charts
+
+helm show values airflow-stable/airflow > values.yaml
+
+helm install airflow airflow-stable/airflow -n airflow -f custom-values.yaml
+ 
+
+------------- Re-deploy using custom image for spark connection------------------
+
+
+docker build -t airflow-custom:1.0.0 .
+
+kind load docker-image airflow-custom:1.0.0 --name cluster
+
+helm show values airflow-stable/airflow > values.yaml
+
+helm upgrade --install airflow airflow-stable/airflow -n airflow -f values.yaml
+
+
+---------------------Run dag files----------------
+
+
+kubectl exec -i -t -n airflow airflow-scheduler-6d8c488f59-k8ljs -- sh 
+
+cd dags 
+
+airflow scheduler
+
+
+------if you want to test your dag tasks -------------------
+
+
+airflow tasks test hello_world hello_task 2022-12-15
+
+airflow tasks test file_Fetch save_csv 2022-12-15
+
+
+
+
+
+
+
+
+
+
+
+

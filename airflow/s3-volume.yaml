@@ -1,0 +1,13 @@
+apiVersion: com.ie.ibm.hpsys/v1alpha1
+kind: Dataset
+metadata:
+  name: kafka-volume-claim-java
+spec:
+  local:
+    type: "COS"
+    accessKeyID: "myaccesskey"
+    secretAccessKey: "mysecretkey"
+    endpoint: "http://minio.default.svc.cluster.local:9000"
+    bucket: "kafka-java-plugins"
+    region: "" #it can be empty
+  

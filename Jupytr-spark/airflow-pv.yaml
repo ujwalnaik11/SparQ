@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume # Create PV 
+metadata:
+  name: airflow-volume # Sets PV name
+  labels:
+    type: local # Sets PV's type
+    app: airflow
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi # Sets PV's size
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/data/airflow" # Sets PV's host path

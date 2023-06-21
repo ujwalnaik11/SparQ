@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: livy
+  namespace: airflow
+spec:
+  type: ClusterIP
+  selector:
+    app: livy
+  ports:
+    - protocol: TCP
+      port: 8998
+      targetPort: 8998
+    

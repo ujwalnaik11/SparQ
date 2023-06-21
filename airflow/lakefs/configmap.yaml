@@ -1,0 +1,18 @@
+  database:
+    type: "postgres"
+    postgres:
+      connection_string: "postgres://superset:superset@superset-postgresql.super.svc.cluster.local:5432/superset"  
+  
+  auth:
+    encrypt:
+      secret_key: "abcdefghijklmno"
+  
+  blockstore:
+    type: "s3"
+    s3:
+      force_path_style: "true"
+      endpoint: http://minio.default.svc.cluster.local:9000
+      discover_bucket_region: "false"
+      credentials:
+        access_key_id: "myaccesskey"
+        secret_access_key: "mysecretkey"

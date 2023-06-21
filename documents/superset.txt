@@ -1,0 +1,33 @@
+
+
+1. (Run command prompt in admnistrator )
+
+choco install kubernetes-helm                    
+
+helm repo add superset http://apache.github.io/superset/
+helm install my-superset superset/superset
+
+
+2. ( port forward and login with "admin" as username and password )
+
+
+3. Database Connection in superset (click on Sqlalchemy Uri option in blue colour )
+
+postgresql+psycopg2://superset:superset@superset-postgresql:5432/superset
+
+
+(syntax) : postgresql+psycopg2://username:password@postgres-service-name:5432/dbname
+
+
+4. psql  cli (not needed )
+
+
+kubectl exec -i -t -n default superset-postgresql-0 sh
+psql -h superset-postgresql -U superset --password -p 5432 superset
+
+
+
+
+
+
+
